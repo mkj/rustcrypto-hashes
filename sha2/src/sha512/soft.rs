@@ -94,6 +94,23 @@ pub fn sha512_digest_round(
     [a1, e1]
 }
 
+fn rounds4(
+    ae: &mut [u64; 2],
+    bf: &mut [u64; 2],
+    cg: &mut [u64; 2],
+    dh: &mut [u64; 2],
+    wk0: &[u64; 2],
+    wk1: &[u64; 2],
+    ) {
+    let [u, t] = *wk0;
+    let [w, v] = *wk1;
+    *dh = sha512_digest_round(*ae, *bf, *cg, *dh, t);
+    *cg = sha512_digest_round(*dh, *ae, *bf, *cg, u);
+    *bf = sha512_digest_round(*cg, *dh, *ae, *bf, v);
+    *ae = sha512_digest_round(*bf, *cg, *dh, *ae, w);
+}
+
+
 /// Process a block with the SHA-512 algorithm.
 pub fn sha512_digest_block_u64(state: &mut [u64; 8], block: &[u64; 16]) {
     let k = &K64X2;
@@ -104,6 +121,7 @@ pub fn sha512_digest_block_u64(state: &mut [u64; 8], block: &[u64; 16]) {
         };
     }
 
+    #[cfg(not(feature = "smaller"))]
     macro_rules! rounds4 {
         ($ae:ident, $bf:ident, $cg:ident, $dh:ident, $wk0:expr, $wk1:expr) => {{
             let [u, t] = $wk0;
@@ -113,6 +131,13 @@ pub fn sha512_digest_block_u64(state: &mut [u64; 8], block: &[u64; 16]) {
             $cg = sha512_digest_round($dh, $ae, $bf, $cg, u);
             $bf = sha512_digest_round($cg, $dh, $ae, $bf, v);
             $ae = sha512_digest_round($bf, $cg, $dh, $ae, w);
+        }};
+    }
+
+    #[cfg(feature = "smaller")]
+    macro_rules! rounds4 {
+        ($ae:ident, $bf:ident, $cg:ident, $dh:ident, $wk0:expr, $wk1:expr) => {{
+            rounds4(&mut $ae, &mut $bf, &mut $cg, &mut $dh, &$wk0, &$wk1);
         }};
     }
 

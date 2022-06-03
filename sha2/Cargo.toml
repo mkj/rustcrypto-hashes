@@ -33,6 +33,7 @@ asm = ["sha2-asm"] # WARNING: this feature SHOULD NOT be enabled by library crat
 compress = [] # Expose compress functions
 force-soft = [] # Force software implementation
 asm-aarch64 = ["asm"] # DEPRECATED: use `asm` instead
+smaller = [] # Produce smaller code at the expense of speed
 
 [package.metadata.docs.rs]
 all-features = true
